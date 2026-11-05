@@ -1,10 +1,14 @@
-import { SKELETON_NOTICE } from '../src/notice';
+import { KeeperStatus } from '../src/components/KeeperStatus';
 
 export default function HomePage() {
   return (
-    <main>
-      <h1>Stellar Recurring</h1>
-      <p>{SKELETON_NOTICE}</p>
-    </main>
+    <div className="stack">
+      <h1>Overview</h1>
+      <p className="muted">
+        Merchant dashboard for Stellar Recurring. Wallet connection, plans, subscribers and revenue
+        are added in the next tasks. This page shows whether the keeper is reachable.
+      </p>
+      <KeeperStatus />
+    </div>
   );
 }

@@ -6,9 +6,28 @@ This is **not** payment streaming. It is one discrete charge per period.
 
 ## Status
 
-**Skeleton only.** One page renders a notice. There is no wallet connection, keeper client, or data view yet.
+Built so far (Phase 3 is in progress):
+
+- Design tokens in `app/globals.css`: all colours in one block with a light and a dark theme (dark follows the system setting). A test checks WCAG AA contrast (4.5:1 for text, 3:1 for the focus ring) for every text pair in both themes, and that no colour is written anywhere else in the stylesheet.
+- Layout with a skip link, a main navigation landmark and a focusable `main`.
+- A typed client for the keeper's read API. Every response is checked against a schema, and errors are typed (`KeeperApiError`, `KeeperNetworkError`, `KeeperResponseError`).
+- Loading, error (with retry) and empty states in one `StateView` component, used by every data view.
+- An overview page that shows whether the keeper is reachable, which network it is on, whether it can charge, and when it last synced.
+
+Not built yet: wallet connection, plans, subscribers, charges and revenue pages.
 
 **Audit status: the contract this dashboard talks to has not been audited. This dashboard has not been audited either.**
+
+## Configuration
+
+Set at build time (they end up in the browser, so they must not hold secrets). See `.env.example`.
+
+| Variable                      | Meaning                                                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_KEEPER_URL`      | Address of the keeper read API, for example `http://127.0.0.1:8080`. The keeper must allow this site's origin in its `CORS_ORIGINS`. |
+| `NEXT_PUBLIC_STELLAR_NETWORK` | Network the dashboard expects, for example `testnet`. The overview warns if the keeper reports another one.                          |
+
+If a variable is missing, the pages say which one instead of failing silently.
 
 ## Verify
 

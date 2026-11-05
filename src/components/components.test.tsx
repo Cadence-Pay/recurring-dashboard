@@ -187,7 +187,7 @@ describe('navigation', () => {
   it('marks only the current page with aria-current', () => {
     render(
       <nav aria-label="Main">
-        <NavList items={[...NAV_ITEMS, { href: '/plans', label: 'Plans' }]} pathname="/plans/2" />
+        <NavList items={NAV_ITEMS} pathname="/plans/2" />
       </nav>,
     );
     expect(screen.getByRole('link', { name: 'Plans' }).getAttribute('aria-current')).toBe('page');

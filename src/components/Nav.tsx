@@ -10,7 +10,10 @@ export interface NavItem {
 }
 
 /** Pages of the dashboard. Add an entry when a page is built. */
-export const NAV_ITEMS: readonly NavItem[] = [{ href: '/', label: 'Overview' }];
+export const NAV_ITEMS: readonly NavItem[] = [
+  { href: '/', label: 'Overview' },
+  { href: '/plans', label: 'Plans' },
+];
 
 /** Whether `href` is the page being shown. The overview matches only the exact path. */
 export function isCurrent(href: string, pathname: string): boolean {

@@ -13,11 +13,18 @@ Built so far (Phase 3 is in progress):
 - A typed client for the keeper's read API. Every response is checked against a schema, and errors are typed (`KeeperApiError`, `KeeperNetworkError`, `KeeperResponseError`).
 - Loading, error (with retry) and empty states in one `StateView` component, used by every data view.
 - Wallet connection through the Stellar Wallets Kit (`@creit.tech/stellar-wallets-kit`), behind a small adapter so the rest of the app and the tests do not depend on a browser wallet. It shows the connected address (shortened, full address on hover), the expected network, a disconnect button, and a warning when the wallet reports a different network than the dashboard expects. Nothing is remembered between page loads. The kit is loaded only when the person presses Connect.
+- A **Plans** page for the connected merchant (their address is the merchant):
+  - a list of their plans from the keeper, with amounts shown in whole tokens (the token's symbol and decimals are read from the token contract) and periods in plain words;
+  - a form to create a plan (token contract id, amount per period, period length). The amount is converted using the token's decimals and refused if it has more decimal places than the token, so nobody pays a different amount than typed. The call is simulated, signed in the wallet and sent through the generated contract bindings in `src/contract/`;
+  - a deactivate button with an explicit confirmation that says existing subscribers keep being charged.
+    Creating or deactivating is disabled while the wallet is on the wrong network. A declined signature, a contract refusal, a network failure and a transaction that is sent but not yet confirmed each get their own message; the last one warns not to send again blindly.
 - An overview page that shows whether the keeper is reachable, which network it is on, whether it can charge, and when it last synced.
 
-Not built yet: plans, subscribers, charges and revenue pages.
+Not built yet: the subscribers page, and charges and revenue.
 
-The wallet code is covered by unit tests with a fake kit. It has **not** been tried with a real wallet in a browser yet.
+The plans list comes from the keeper, which syncs every few seconds, so a new plan or a deactivation shows up after the next sync (the page says so and has a Refresh button).
+
+The wallet and transaction code is covered by unit tests with fakes (no real wallet, no network). It has **not** been tried with a real wallet in a browser yet.
 
 **Audit status: the contract this dashboard talks to has not been audited. This dashboard has not been audited either.**
 

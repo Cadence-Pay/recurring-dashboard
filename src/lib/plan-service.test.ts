@@ -80,6 +80,7 @@ function service(client: Partial<PlanClientLike>) {
   const full: PlanClientLike = {
     create_plan: () => Promise.resolve(call(ok(1n))),
     deactivate_plan: () => Promise.resolve(call(ok(null))),
+    cancel: () => Promise.resolve(call(ok(null))),
     ...client,
   };
   return createPlanService(CONFIG, adapter, () => full);
@@ -198,6 +199,36 @@ describe('createPlanService.deactivatePlan', () => {
       .deactivatePlan({ merchant: MERCHANT, planId: 99 })
       .catch((e: unknown) => e);
     expect(failure).toMatchObject({ contractError: 'PlanNotFound' });
+  });
+});
+
+describe('createPlanService.cancelSubscription', () => {
+  it('cancels and returns the transaction hash', async () => {
+    const cancel = vi.fn(() => Promise.resolve(call(ok(null), { hash: 'CXL' })));
+    const result = await service({ cancel }).cancelSubscription({ caller: MERCHANT, subId: 4 });
+    expect(result).toEqual({ txHash: 'CXL' });
+    expect(cancel).toHaveBeenCalledWith({ caller: MERCHANT, sub_id: 4n });
+  });
+
+  it('explains that a subscription cannot be cancelled twice', async () => {
+    const failure = await service({
+      cancel: () =>
+        Promise.reject(
+          new AssembledTransaction.Errors.SimulationFailed('HostError: Error(Contract, #6)'),
+        ),
+    })
+      .cancelSubscription({ caller: MERCHANT, subId: 4 })
+      .catch((e: unknown) => e);
+    expect(failure).toMatchObject({ code: 'CONTRACT', contractError: 'NotActive' });
+    expect((failure as TransactionError).message).toContain('already cancelled');
+  });
+
+  it('says so when the person declines to sign', async () => {
+    const declined = call(ok(null), { sendFails: new WalletError('REJECTED', 'closed') });
+    const failure = await service({ cancel: () => Promise.resolve(declined) })
+      .cancelSubscription({ caller: MERCHANT, subId: 4 })
+      .catch((e: unknown) => e);
+    expect(failure).toMatchObject({ code: 'REJECTED' });
   });
 });
 

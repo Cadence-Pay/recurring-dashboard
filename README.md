@@ -18,9 +18,10 @@ Built so far (Phase 3 is in progress):
   - a form to create a plan (token contract id, amount per period, period length). The amount is converted using the token's decimals and refused if it has more decimal places than the token, so nobody pays a different amount than typed. The call is simulated, signed in the wallet and sent through the generated contract bindings in `src/contract/`;
   - a deactivate button with an explicit confirmation that says existing subscribers keep being charged.
     Creating or deactivating is disabled while the wallet is on the wrong network. A declined signature, a contract refusal, a network failure and a transaction that is sent but not yet confirmed each get their own message; the last one warns not to send again blindly.
+- A **plan page** (`/plans/<id>`, linked from the plans list): the plan in plain words and its subscribers, 25 per page, each with status, next charge time (flagged "Due" once it has passed), and payments made (the first payment counts). The plan's merchant can cancel a subscription, with a confirmation that says the subscriber would have to subscribe again and that money already paid is not returned. Cancel is disabled for any other account, when no wallet is connected, and on the wrong network; the page says why.
 - An overview page that shows whether the keeper is reachable, which network it is on, whether it can charge, and when it last synced.
 
-Not built yet: the subscribers page, and charges and revenue.
+Not built yet: charges and revenue.
 
 The plans list comes from the keeper, which syncs every few seconds, so a new plan or a deactivation shows up after the next sync (the page says so and has a Refresh button).
 

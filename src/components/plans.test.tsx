@@ -45,6 +45,7 @@ function fakes(
   const unused = () => Promise.reject(new Error('not used'));
   const keeper: KeeperClient = {
     getHealth: unused,
+    getPlan: unused,
     listPlans: overrides.list ?? vi.fn(() => Promise.resolve(pageOf([PLAN]))),
     listSubscriptions: unused,
     listCharges: unused,
@@ -56,6 +57,7 @@ function fakes(
       vi.fn(() => Promise.resolve({ planId: 2, txHash: 'ABCDEF1234567890' })),
     deactivatePlan:
       overrides.deactivatePlan ?? vi.fn(() => Promise.resolve({ txHash: 'DEACT1234567890' })),
+    cancelSubscription: vi.fn(() => Promise.resolve({ txHash: 'CANCEL1234567890' })),
   };
   const tokens: TokenService = {
     getTokenInfo: overrides.getTokenInfo ?? vi.fn(() => Promise.resolve(XLM)),

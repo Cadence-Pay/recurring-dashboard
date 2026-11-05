@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { describePeriod, formatAmount } from '../lib/amount';
 import type { KeeperClient, Plan } from '../lib/keeper-client';
@@ -206,6 +207,12 @@ function PlansTable(props: {
                 </td>
                 <td>{describePeriod(plan.periodSecs)}</td>
                 <td>
+                  <Link
+                    href={`/plans/${String(plan.id)}`}
+                    aria-label={`Subscribers of plan ${String(plan.id)}`}
+                  >
+                    Subscribers
+                  </Link>{' '}
                   {plan.active ? (
                     <span className="badge badge--ok">Active</span>
                   ) : (

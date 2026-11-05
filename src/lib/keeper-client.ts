@@ -122,6 +122,8 @@ export interface KeeperClient {
     options?: PageOptions & { merchant?: string },
     signal?: AbortSignal,
   ): Promise<Page<Plan>>;
+  /** One plan. Throws KeeperApiError with status 404 if there is none. */
+  getPlan(planId: number, signal?: AbortSignal): Promise<Plan>;
   listSubscriptions(
     planId: number,
     options?: PageOptions,
@@ -204,6 +206,8 @@ export function createKeeperClient(
         { merchant: options?.merchant, ...paging(options) },
         signal,
       ),
+    getPlan: (planId, signal) =>
+      get(`/plans/${encodeURIComponent(String(planId))}`, planSchema, {}, signal),
     listSubscriptions: (planId, options, signal) =>
       get(
         `/plans/${encodeURIComponent(String(planId))}/subscriptions`,

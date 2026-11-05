@@ -19,6 +19,7 @@ function clientWith(getHealth: KeeperClient['getHealth']): KeeperClient {
   const unused = () => Promise.reject(new Error('not used in this test'));
   return {
     getHealth,
+    getPlan: unused,
     listPlans: unused,
     listSubscriptions: unused,
     listCharges: unused,

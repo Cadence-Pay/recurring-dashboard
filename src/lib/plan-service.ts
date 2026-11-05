@@ -152,6 +152,12 @@ export interface PlanService {
    * @throws TransactionError
    */
   deactivatePlan(input: { merchant: string; planId: number }): Promise<{ txHash: string }>;
+  /**
+   * Cancel a subscription. The caller (the subscriber or the plan's merchant) signs. The
+   * subscription is never charged again; the token allowance is not touched.
+   * @throws TransactionError
+   */
+  cancelSubscription(input: { caller: string; subId: number }): Promise<{ txHash: string }>;
 }
 
 /** Symbol and decimals of a token. */
@@ -193,6 +199,7 @@ export interface PlanClientLike {
     period_secs: bigint;
   }): Promise<SimulatedCall<bigint>>;
   deactivate_plan(args: { plan_id: bigint }): Promise<SimulatedCall<null>>;
+  cancel(args: { caller: string; sub_id: bigint }): Promise<SimulatedCall<null>>;
 }
 
 /**
@@ -248,6 +255,20 @@ export function createPlanService(
       try {
         const tx = await clientFor(input.merchant).deactivate_plan({
           plan_id: BigInt(input.planId),
+        });
+        if (tx.result.isErr()) throw contractRefusal(tx.result.unwrapErr().message, tx.simulation);
+        const sent = await tx.signAndSend();
+        if (sent.result.isErr()) throw contractRefusal(sent.result.unwrapErr().message);
+        return { txHash: hashOf(sent.sendTransactionResponse) };
+      } catch (error) {
+        throw toTransactionError(error);
+      }
+    },
+    async cancelSubscription(input) {
+      try {
+        const tx = await clientFor(input.caller).cancel({
+          caller: input.caller,
+          sub_id: BigInt(input.subId),
         });
         if (tx.result.isErr()) throw contractRefusal(tx.result.unwrapErr().message, tx.simulation);
         const sent = await tx.signAndSend();

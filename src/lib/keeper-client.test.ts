@@ -70,6 +70,19 @@ describe('createKeeperClient', () => {
     expect(calls[0]?.url.search).toBe('');
   });
 
+  it('reads one plan and reports an unknown one as a 404 error', async () => {
+    const found = fakeFetch(200, PLAN);
+    const plan = await createKeeperClient('http://k.test', found.impl).getPlan(1);
+    expect(plan).toEqual(PLAN);
+    expect(found.calls[0]?.url.pathname).toBe('/plans/1');
+
+    const missing = fakeFetch(404, { error: { code: 'NOT_FOUND', message: 'Plan 9 not found' } });
+    const failure = await createKeeperClient('http://k.test', missing.impl)
+      .getPlan(9)
+      .catch((e: unknown) => e);
+    expect(failure).toMatchObject({ status: 404, code: 'NOT_FOUND' });
+  });
+
   it('lists subscriptions and charges of the right resource', async () => {
     const subs = fakeFetch(200, {
       items: [

@@ -9,6 +9,8 @@
     "node": ">=24"
   },
   "scripts": {
+    "dev": "next dev",
+    "start": "next start",
     "lint": "eslint . && prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

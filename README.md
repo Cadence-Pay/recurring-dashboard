@@ -31,6 +31,16 @@ The wallet and transaction code is covered by unit tests with fakes (no real wal
 
 **Audit status: the contract this dashboard talks to has not been audited. This dashboard has not been audited either.**
 
+## Run it
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dev            # development server on http://localhost:3000
+pnpm build && pnpm start   # production build
+```
+
+Set the variables below first. The keeper must list this site's origin in its `CORS_ORIGINS`.
+
 ## Configuration
 
 Set at build time (they end up in the browser, so they must not hold secrets). See `.env.example`.

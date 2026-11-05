@@ -361,7 +361,8 @@ export function createTokenService(
         if (typeof symbol !== 'string' || typeof decimals !== 'number') {
           throw new TransactionError('FAILED', 'This contract does not look like a token.');
         }
-        return { symbol, decimals };
+        // The contract of native XLM answers `native`, which means nothing to a person.
+        return { symbol: symbol === 'native' ? 'XLM' : symbol, decimals };
       } catch (error) {
         if (error instanceof TransactionError) throw error;
         if (signal?.aborted === true) throw error;

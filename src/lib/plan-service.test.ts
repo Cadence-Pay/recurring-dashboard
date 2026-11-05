@@ -298,6 +298,11 @@ describe('createTokenService', () => {
     expect(simulate).toHaveBeenCalledTimes(2);
   });
 
+  it('shows the native token as XLM instead of the word the contract answers', async () => {
+    const info = await createTokenService(CONFIG, answer('native', 7)).getTokenInfo(TOKEN);
+    expect(info.symbol).toBe('XLM');
+  });
+
   it('refuses an id that is not a contract', async () => {
     const simulate = answer('XLM', 7);
     const failure = await createTokenService(CONFIG, simulate as never)

@@ -138,6 +138,12 @@ describe('KeeperStatus (reads the settings)', () => {
   it('starts loading when the settings are valid', async () => {
     vi.stubEnv('NEXT_PUBLIC_KEEPER_URL', 'http://127.0.0.1:1');
     vi.stubEnv('NEXT_PUBLIC_STELLAR_NETWORK', 'testnet');
+    vi.stubEnv('NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE', 'Test SDF Network ; September 2015');
+    vi.stubEnv('NEXT_PUBLIC_STELLAR_RPC_URL', 'https://soroban-testnet.stellar.org');
+    vi.stubEnv(
+      'NEXT_PUBLIC_CONTRACT_ID',
+      'CCUXOGU3N5HWMLRDXC5TCQ3QDA23X3RJCDXWHMBIC4SFLD2IABQT465E',
+    );
     try {
       render(<KeeperStatus />);
       expect(screen.getByRole('status').textContent).toContain('Loading');

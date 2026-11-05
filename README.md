@@ -12,9 +12,12 @@ Built so far (Phase 3 is in progress):
 - Layout with a skip link, a main navigation landmark and a focusable `main`.
 - A typed client for the keeper's read API. Every response is checked against a schema, and errors are typed (`KeeperApiError`, `KeeperNetworkError`, `KeeperResponseError`).
 - Loading, error (with retry) and empty states in one `StateView` component, used by every data view.
+- Wallet connection through the Stellar Wallets Kit (`@creit.tech/stellar-wallets-kit`), behind a small adapter so the rest of the app and the tests do not depend on a browser wallet. It shows the connected address (shortened, full address on hover), the expected network, a disconnect button, and a warning when the wallet reports a different network than the dashboard expects. Nothing is remembered between page loads. The kit is loaded only when the person presses Connect.
 - An overview page that shows whether the keeper is reachable, which network it is on, whether it can charge, and when it last synced.
 
-Not built yet: wallet connection, plans, subscribers, charges and revenue pages.
+Not built yet: plans, subscribers, charges and revenue pages.
+
+The wallet code is covered by unit tests with a fake kit. It has **not** been tried with a real wallet in a browser yet.
 
 **Audit status: the contract this dashboard talks to has not been audited. This dashboard has not been audited either.**
 

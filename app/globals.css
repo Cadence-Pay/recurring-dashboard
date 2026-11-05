@@ -139,6 +139,22 @@ a {
   color: var(--color-primary-contrast);
 }
 
+.wallet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.wallet__line {
+  margin: 0;
+}
+
+.wallet__warning {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 .site-main {
   max-width: var(--content-width);
   margin: 0 auto;

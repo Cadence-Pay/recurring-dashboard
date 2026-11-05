@@ -1,35 +1,21 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
-import { createKeeperClient } from '../lib/keeper-client';
-import { createPlanService, createTokenService } from '../lib/plan-service';
-import { getPublicConfig } from '../lib/public-env';
 import { ConfigProblems } from './KeeperStatus';
 import { SubscribersView } from './SubscribersView';
-import { useWallet } from './WalletProvider';
+import { useServices } from './useServices';
+
+/** Reads a positive whole number from an address segment, or undefined if it is not one. */
+export function parseId(text: string | undefined): number | undefined {
+  return text !== undefined && /^[1-9]\d{0,14}$/.test(text) ? Number(text) : undefined;
+}
 
 /** The page for one plan: reads the plan number from the address and builds the real services. */
 export function PlanDetailPage() {
   const params = useParams<{ id: string }>();
-  const config = getPublicConfig();
-  const { adapter } = useWallet();
-  const services = useMemo(
-    () =>
-      config.ok
-        ? {
-            keeper: createKeeperClient(config.config.keeperUrl),
-            plans: createPlanService(config.config, adapter),
-            tokens: createTokenService(config.config),
-          }
-        : undefined,
-    // The settings are fixed for a build, so the wallet adapter is the only thing that can change.
-    [config.ok, adapter],
-  );
-  if (!config.ok || services === undefined) {
-    return <ConfigProblems problems={config.ok ? [] : config.problems} />;
-  }
-  const planId = /^[1-9]\d{0,14}$/.test(params.id) ? Number(params.id) : undefined;
+  const result = useServices();
+  if (!result.ok) return <ConfigProblems problems={result.problems} />;
+  const planId = parseId(params.id);
   if (planId === undefined) {
     return (
       <div className="state state--error" role="alert">
@@ -37,5 +23,6 @@ export function PlanDetailPage() {
       </div>
     );
   }
-  return <SubscribersView planId={planId} {...services} />;
+  const { keeper, plans, tokens } = result.services;
+  return <SubscribersView planId={planId} keeper={keeper} plans={plans} tokens={tokens} />;
 }

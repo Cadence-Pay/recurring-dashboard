@@ -19,9 +19,11 @@ Built so far (Phase 3 is in progress):
   - a deactivate button with an explicit confirmation that says existing subscribers keep being charged.
     Creating or deactivating is disabled while the wallet is on the wrong network. A declined signature, a contract refusal, a network failure and a transaction that is sent but not yet confirmed each get their own message; the last one warns not to send again blindly.
 - A **plan page** (`/plans/<id>`, linked from the plans list): the plan in plain words and its subscribers, 25 per page, each with status, next charge time (flagged "Due" once it has passed), and payments made (the first payment counts). The plan's merchant can cancel a subscription, with a confirmation that says the subscriber would have to subscribe again and that money already paid is not returned. Cancel is disabled for any other account, when no wallet is connected, and on the wrong network; the page says why.
+- A **charges page** per subscription (`/subscriptions/<id>`, linked from the plan page): every charge the keeper tried, with its due time, a status in plain words (Charged, Waiting to retry with the next try time, Failed with the reason, Handled elsewhere), amount, attempts, and the transaction as a link to the block explorer on testnet and mainnet (a plain hash on a private network). It says that the first payment is not a charge and that other keepers' charges are not listed.
+- A **revenue page**: for the connected merchant, one total per token in whole tokens with the number of payments, counted from the subscriptions the keeper synced (first payments plus every charge, whoever made it) and the time of that sync.
 - An overview page that shows whether the keeper is reachable, which network it is on, whether it can charge, and when it last synced.
 
-Not built yet: charges and revenue.
+Not built yet: CSV export, invoices and a revenue chart over time (`WAVE-ISSUE(dashboard-1)`, `-2` and `-5` mark where they plug in).
 
 The plans list comes from the keeper, which syncs every few seconds, so a new plan or a deactivation shows up after the next sync (the page says so and has a Refresh button).
 

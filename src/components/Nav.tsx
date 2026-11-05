@@ -13,6 +13,7 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: '/', label: 'Overview' },
   { href: '/plans', label: 'Plans' },
+  { href: '/revenue', label: 'Revenue' },
 ];
 
 /** Whether `href` is the page being shown. The overview matches only the exact path. */

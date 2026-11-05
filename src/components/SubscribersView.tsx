@@ -260,6 +260,12 @@ function SubscribersTable(props: {
               </td>
               <td>{sub.charges + 1}</td>
               <td>
+                <Link
+                  href={`/subscriptions/${String(sub.id)}`}
+                  aria-label={`Charges of subscription ${String(sub.id)}`}
+                >
+                  Charges
+                </Link>{' '}
                 {sub.status === 'Active' ? (
                   <button
                     type="button"

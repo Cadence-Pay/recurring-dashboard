@@ -6,7 +6,7 @@ This is **not** payment streaming. It is one discrete charge per period.
 
 ## Status
 
-Built so far (Phase 3 is in progress):
+Built:
 
 - Design tokens in `app/globals.css`: all colours in one block with a light and a dark theme (dark follows the system setting). A test checks WCAG AA contrast (4.5:1 for text, 3:1 for the focus ring) for every text pair in both themes, and that no colour is written anywhere else in the stylesheet.
 - Layout with a skip link, a main navigation landmark and a focusable `main`.
@@ -27,7 +27,9 @@ Not built yet: CSV export, invoices and a revenue chart over time (`WAVE-ISSUE(d
 
 The plans list comes from the keeper, which syncs every few seconds, so a new plan or a deactivation shows up after the next sync (the page says so and has a Refresh button).
 
-The wallet and transaction code is covered by unit tests with fakes (no real wallet, no network). It has **not** been tried with a real wallet in a browser yet.
+Tested: `pnpm test` (212 at the time of writing) covers the forms, every loading, empty and error state, the wallet adapter with a fake kit, the transaction service with a fake client, the colour contrast, and a mechanical accessibility audit of every page. The built dashboard and keeper were run together against the real testnet: all pages answered and the browser handshake (CORS) between them worked.
+
+**Not tested:** the dashboard in a real browser with a real wallet, by a person. Creating a plan, deactivating it and cancelling a subscription _through the dashboard_ have never been done on a real network (the end-to-end run used the CLI for those steps). Keyboard and screen-reader use is unverified by a person. The checklist for that is in the repository's `docs/USER_ACTIONS.md`. Nothing has run on mainnet.
 
 **Audit status: the contract this dashboard talks to has not been audited. This dashboard has not been audited either.**
 

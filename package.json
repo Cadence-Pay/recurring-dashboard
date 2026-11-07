@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Merchant dashboard for Stellar Recurring.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cadence-Pay/recurring-dashboard.git"
+  },
+  "homepage": "https://github.com/Cadence-Pay/recurring-dashboard#readme",
+  "bugs": {
+    "url": "https://github.com/Cadence-Pay/recurring-dashboard/issues"
+  },
   "private": true,
   "type": "module",
   "engines": {

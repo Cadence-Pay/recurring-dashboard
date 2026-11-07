@@ -1,6 +1,8 @@
 # recurring-dashboard
 
-Next.js (App Router) merchant dashboard for Stellar Recurring. Planned job: show a merchant their plans, subscribers, charges and revenue, using the keeper read API and a connected wallet.
+[![ci](https://github.com/Cadence-Pay/recurring-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Cadence-Pay/recurring-dashboard/actions/workflows/ci.yml)
+
+Next.js (App Router) merchant dashboard for Stellar Recurring. It shows a merchant their plans, subscribers, charges and revenue from the keeper's read API, and lets them create and deactivate plans and cancel subscriptions with a connected wallet.
 
 This is **not** payment streaming. It is one discrete charge per period.
 
@@ -29,7 +31,7 @@ The plans list comes from the keeper, which syncs every few seconds, so a new pl
 
 Tested: `pnpm test` (212 at the time of writing) covers the forms, every loading, empty and error state, the wallet adapter with a fake kit, the transaction service with a fake client, the colour contrast, and a mechanical accessibility audit of every page. The built dashboard and keeper were run together against the real testnet: all pages answered and the browser handshake (CORS) between them worked.
 
-**Not tested:** the dashboard in a real browser with a real wallet, by a person. Creating a plan, deactivating it and cancelling a subscription _through the dashboard_ have never been done on a real network (the end-to-end run used the CLI for those steps). Keyboard and screen-reader use is unverified by a person. This manual click-through is still to be done by a person. Nothing has run on mainnet.
+**Not tested:** the dashboard in a real browser with a real wallet, by a person. Creating a plan, deactivating it and cancelling a subscription _through the dashboard_ have never been done on a real network (the end-to-end run used the CLI for those steps). Keyboard and screen-reader use has not been checked by a person either. Nothing has run on mainnet.
 
 **Audit status: the contract this dashboard talks to has not been audited. This dashboard has not been audited either.**
 
@@ -47,10 +49,13 @@ Set the variables below first. The keeper must list this site's origin in its `C
 
 Set at build time (they end up in the browser, so they must not hold secrets). See `.env.example`.
 
-| Variable                      | Meaning                                                                                                                              |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `NEXT_PUBLIC_KEEPER_URL`      | Address of the keeper read API, for example `http://127.0.0.1:8080`. The keeper must allow this site's origin in its `CORS_ORIGINS`. |
-| `NEXT_PUBLIC_STELLAR_NETWORK` | Network the dashboard expects, for example `testnet`. The overview warns if the keeper reports another one.                          |
+| Variable                                 | Meaning                                                                                                                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_KEEPER_URL`                 | Address of the keeper read API, for example `http://127.0.0.1:8080`. The keeper must allow this site's origin in its `CORS_ORIGINS`.                                                                         |
+| `NEXT_PUBLIC_STELLAR_NETWORK`            | Network the dashboard expects, for example `testnet`. The overview warns if the keeper reports another one.                                                                                                  |
+| `NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE` | Passphrase of that network, for example `Test SDF Network ; September 2015` on testnet. Must match the network label.                                                                                        |
+| `NEXT_PUBLIC_STELLAR_RPC_URL`            | Stellar RPC server used to build and send transactions, for example `https://soroban-testnet.stellar.org`.                                                                                                   |
+| `NEXT_PUBLIC_CONTRACT_ID`                | The deployed recurring contract (starts with `C`). The current testnet one is in the contracts repository's [docs/TESTNET.md](https://github.com/Cadence-Pay/recurring-contracts/blob/main/docs/TESTNET.md). |
 
 If a variable is missing, the pages say which one instead of failing silently.
 
@@ -61,6 +66,19 @@ pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm test && pn
 ```
 
 Needs Node 24 or newer and pnpm.
+
+## Stellar Recurring repositories
+
+| Repository                                                                | What it is                                                                                                       |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| [recurring-contracts](https://github.com/Cadence-Pay/recurring-contracts) | the Soroban contract: plans, subscriptions, `charge`, `cancel` (testnet deployment and live runs in its `docs/`) |
+| [recurring-keeper](https://github.com/Cadence-Pay/recurring-keeper)       | service that charges due subscriptions and serves the read API this dashboard uses                               |
+| [recurring-dashboard](https://github.com/Cadence-Pay/recurring-dashboard) | this dashboard                                                                                                   |
+| [recurring-checkout](https://github.com/Cadence-Pay/recurring-checkout)   | React subscribe button for websites                                                                              |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems privately as described in [SECURITY.md](SECURITY.md), never in a public issue.
 
 ## License
 

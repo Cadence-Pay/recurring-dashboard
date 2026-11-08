@@ -87,6 +87,14 @@ export function toTransactionError(error: unknown): TransactionError {
     );
   }
   const text = error instanceof Error ? error.message : '';
+  // The RPC client throws a plain Error with this text when the signing account is unfunded.
+  if (/Account not found/i.test(text)) {
+    return new TransactionError(
+      'FAILED',
+      'This account does not exist on this network yet. Fund it first.',
+      { cause: error },
+    );
+  }
   if (error instanceof AssembledTransaction.Errors.SimulationFailed) {
     const name = contractErrorName(text);
     if (name !== undefined) {
@@ -118,6 +126,15 @@ export function toTransactionError(error: unknown): TransactionError {
     });
   }
   if (error instanceof SentTransaction.Errors.SendFailed) {
+    // The time window of a transaction comes from this computer's clock. If the clock is off by
+    // more than the window, the network rejects every transaction as too late or too early.
+    if (/tx_too_late|tx_too_early|txTooLate|txTooEarly/.test(text)) {
+      return new TransactionError(
+        'FAILED',
+        "The network rejected the transaction because this computer's clock is wrong. Set the date and time to update automatically, then try again. Nothing was charged.",
+        { cause: error },
+      );
+    }
     return new TransactionError('FAILED', 'The network did not accept the transaction.', {
       cause: error,
     });

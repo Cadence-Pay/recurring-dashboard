@@ -245,6 +245,27 @@ describe('toTransactionError', () => {
     expect(e.message).toContain('does not exist on this network');
   });
 
+  it('maps an unfunded account reported by the RPC client as a plain Error', () => {
+    const e = toTransactionError(new Error('Account not found: GABC'));
+    expect(e).toMatchObject({ code: 'FAILED' });
+    expect(e.message).toContain('Fund it first');
+  });
+
+  it('maps a send rejected as too late to a clock message', () => {
+    const e = toTransactionError(
+      new SentTransaction.Errors.SendFailed(
+        'Sending the transaction to the network failed!\n{"errorResult":{"result":"tx_too_late"}}',
+      ),
+    );
+    expect(e).toMatchObject({ code: 'FAILED' });
+    expect(e.message).toContain('clock');
+  });
+
+  it('keeps an unknown send failure generic', () => {
+    const e = toTransactionError(new SentTransaction.Errors.SendFailed('txBadSeq'));
+    expect(e.message).toBe('The network did not accept the transaction.');
+  });
+
   it('keeps an unknown simulation failure generic', () => {
     const e = toTransactionError(new AssembledTransaction.Errors.SimulationFailed('weird'));
     expect(e).toMatchObject({ code: 'FAILED' });

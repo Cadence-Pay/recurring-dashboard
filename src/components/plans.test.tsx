@@ -341,6 +341,33 @@ describe('deactivating a plan', () => {
     });
   });
 
+  it('keeps the result and shows the plan as deactivated while the keeper has not synced', async () => {
+    // The keeper still reports the plan as active right after the transaction (it syncs every
+    // ~15 s). The person must not be offered the same deactivation again, and must see the result.
+    const services = fakes();
+    await renderConnected(services);
+    fireEvent.click(await screen.findByRole('button', { name: 'Deactivate plan 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, deactivate' }));
+    await waitFor(() => {
+      expect(services.keeper.listPlans).toHaveBeenCalledTimes(2);
+    });
+    expect(await screen.findByText('Deactivated')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Deactivate plan/ })).toBeNull();
+    expect(screen.getByText(/Plan 1 deactivated \(transaction/)).toBeTruthy();
+  });
+
+  it('forgets a local deactivation when another account connects', async () => {
+    const services = fakes();
+    await renderConnected(services);
+    fireEvent.click(await screen.findByRole('button', { name: 'Deactivate plan 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, deactivate' }));
+    expect(await screen.findByText('Deactivated')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Connect wallet' }));
+    expect(await screen.findByRole('button', { name: 'Deactivate plan 1' })).toBeTruthy();
+    expect(screen.queryByText(/Plan 1 deactivated/)).toBeNull();
+  });
+
   it('shows why it failed and keeps the confirmation open', async () => {
     const deactivatePlan = vi
       .fn<PlanService['deactivatePlan']>()

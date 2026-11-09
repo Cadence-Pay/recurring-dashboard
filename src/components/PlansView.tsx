@@ -38,6 +38,8 @@ export function PlansView(props: PlansViewProps) {
   }
   return (
     <ConnectedPlans
+      // A new account starts from a clean slate: no remembered deactivations or messages.
+      key={wallet.address}
       merchant={wallet.address}
       keeper={keeper}
       plans={plans}
@@ -65,6 +67,12 @@ function ConnectedPlans(props: {
     (signal) => keeper.listPlans({ merchant, limit: 200 }, signal),
     [keeper, merchant, reloadKey],
   );
+  // Plans deactivated from this page. The keeper copies the change on its next sync, so until then
+  // its list still says active; the confirmed transaction is the better source. Deactivation cannot
+  // be undone, so an entry never needs removing.
+  const [deactivated, setDeactivated] = useState<ReadonlySet<number>>(() => new Set());
+  // Kept here, outside the reloading list, so the result stays visible after the list reloads.
+  const [message, setMessage] = useState<Message | null>(null);
 
   return (
     <div className="stack">
@@ -97,13 +105,32 @@ function ConnectedPlans(props: {
               plans={plans}
               tokens={tokens}
               canSign={canSign}
-              onChanged={reload}
+              deactivated={deactivated}
+              onMessage={setMessage}
+              onDeactivated={(planId) => {
+                setDeactivated((prev) => new Set(prev).add(planId));
+                reload();
+              }}
             />
           )}
         </StateView>
+        {message === null ? null : (
+          <p
+            role={message.ok ? 'status' : 'alert'}
+            className={message.ok ? 'badge badge--ok' : 'field__error'}
+          >
+            {message.text}
+          </p>
+        )}
       </section>
     </div>
   );
+}
+
+/** The outcome of the last action on the list, shown under it. */
+interface Message {
+  readonly ok: boolean;
+  readonly text: string;
 }
 
 /** Symbol and decimals for each distinct token, or null when a token cannot be read. */
@@ -132,16 +159,18 @@ function PlansTable(props: {
   plans: PlanService;
   tokens: TokenService;
   canSign: boolean;
-  onChanged: () => void;
+  deactivated: ReadonlySet<number>;
+  onMessage: (message: Message | null) => void;
+  onDeactivated: (planId: number) => void;
 }) {
-  const { items, total, merchant, plans, tokens, canSign, onChanged } = props;
+  const { items, total, merchant, plans, tokens, canSign, deactivated } = props;
+  const { onMessage, onDeactivated } = props;
   const infos = useTokenInfos(
     tokens,
     useMemo(() => items.map((p) => p.token), [items]),
   );
   const [confirming, setConfirming] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -150,17 +179,17 @@ function PlansTable(props: {
 
   async function deactivate(planId: number) {
     setBusy(true);
-    setMessage(null);
+    onMessage(null);
     try {
       const done = await plans.deactivatePlan({ merchant, planId });
-      setMessage({
+      onMessage({
         ok: true,
-        text: `Plan ${String(planId)} deactivated (transaction ${shortAddress(done.txHash)}). The list updates after the keeper's next sync.`,
+        text: `Plan ${String(planId)} deactivated (transaction ${shortAddress(done.txHash)}). Other pages show it after the keeper's next sync.`,
       });
       setConfirming(null);
-      onChanged();
+      onDeactivated(planId);
     } catch (error) {
-      setMessage({
+      onMessage({
         ok: false,
         text: error instanceof TransactionError ? error.message : 'The transaction failed.',
       });
@@ -189,6 +218,7 @@ function PlansTable(props: {
         <tbody>
           {items.map((plan) => {
             const info = infos.get(plan.token);
+            const active = plan.active && !deactivated.has(plan.id);
             return (
               <tr key={plan.id}>
                 <th scope="row">#{plan.id}</th>
@@ -213,14 +243,14 @@ function PlansTable(props: {
                   >
                     Subscribers
                   </Link>{' '}
-                  {plan.active ? (
+                  {active ? (
                     <span className="badge badge--ok">Active</span>
                   ) : (
                     <span className="badge badge--warn">Deactivated</span>
                   )}
                 </td>
                 <td>
-                  {plan.active ? (
+                  {active ? (
                     <button
                       type="button"
                       className="btn btn--danger"
@@ -228,7 +258,7 @@ function PlansTable(props: {
                       aria-label={`Deactivate plan ${String(plan.id)}`}
                       onClick={() => {
                         setConfirming(plan.id);
-                        setMessage(null);
+                        onMessage(null);
                       }}
                     >
                       Deactivate
@@ -273,15 +303,6 @@ function PlansTable(props: {
             </button>
           </div>
         </div>
-      )}
-
-      {message === null ? null : (
-        <p
-          role={message.ok ? 'status' : 'alert'}
-          className={message.ok ? 'badge badge--ok' : 'field__error'}
-        >
-          {message.text}
-        </p>
       )}
     </div>
   );

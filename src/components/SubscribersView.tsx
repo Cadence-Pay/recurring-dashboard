@@ -61,6 +61,12 @@ function PlanWithSubscribers(props: {
     (signal) => keeper.listSubscriptions(plan.id, { limit: PAGE_SIZE, offset }, signal),
     [keeper, plan.id, offset, reloadKey],
   );
+  // Subscriptions cancelled from this page. The keeper copies the change on its next sync, so
+  // until then its list still says active; the confirmed transaction is the better source.
+  // Cancelling cannot be undone, so an entry never needs removing.
+  const [cancelled, setCancelled] = useState<ReadonlySet<number>>(() => new Set());
+  // Kept here, outside the reloading list, so the result stays visible after the list reloads.
+  const [message, setMessage] = useState<Message | null>(null);
 
   const isMerchant = wallet.status === 'connected' && wallet.address === plan.merchant;
   const canCancel = isMerchant && !wrongNetwork;
@@ -115,7 +121,10 @@ function PlanWithSubscribers(props: {
                 caller={wallet.status === 'connected' ? wallet.address : null}
                 plans={plans}
                 canCancel={canCancel}
-                onChanged={() => {
+                cancelled={cancelled}
+                onMessage={setMessage}
+                onCancelled={(subId) => {
+                  setCancelled((prev) => new Set(prev).add(subId));
                   setReloadKey((n) => n + 1);
                 }}
               />
@@ -128,9 +137,23 @@ function PlanWithSubscribers(props: {
             </>
           )}
         </StateView>
+        {message === null ? null : (
+          <p
+            role={message.ok ? 'status' : 'alert'}
+            className={message.ok ? 'badge badge--ok' : 'field__error'}
+          >
+            {message.text}
+          </p>
+        )}
       </section>
     </div>
   );
+}
+
+/** The outcome of the last action on the list, shown under it. */
+interface Message {
+  readonly ok: boolean;
+  readonly text: string;
 }
 
 /** Previous and next buttons with a "Showing 1–25 of 60" line. */
@@ -176,12 +199,14 @@ function SubscribersTable(props: {
   caller: string | null;
   plans: PlanService;
   canCancel: boolean;
-  onChanged: () => void;
+  cancelled: ReadonlySet<number>;
+  onMessage: (message: Message | null) => void;
+  onCancelled: (subId: number) => void;
 }) {
-  const { items, caller, plans, canCancel, onChanged } = props;
+  const { items, caller, plans, canCancel, cancelled } = props;
+  const { onMessage: setMessage, onCancelled } = props;
   const [confirming, setConfirming] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -196,10 +221,10 @@ function SubscribersTable(props: {
       const done = await plans.cancelSubscription({ caller, subId });
       setMessage({
         ok: true,
-        text: `Subscription ${String(subId)} cancelled (transaction ${shortAddress(done.txHash)}). The list updates after the keeper's next sync.`,
+        text: `Subscription ${String(subId)} cancelled (transaction ${shortAddress(done.txHash)}). Other pages show it after the keeper's next sync.`,
       });
       setConfirming(null);
-      onChanged();
+      onCancelled(subId);
     } catch (error) {
       setMessage({
         ok: false,
@@ -228,61 +253,66 @@ function SubscribersTable(props: {
           </tr>
         </thead>
         <tbody>
-          {items.map((sub) => (
-            <tr key={sub.id}>
-              <th scope="row">#{sub.id}</th>
-              <td>
-                <span className="mono" title={sub.subscriber}>
-                  {shortAddress(sub.subscriber)}
-                </span>
-              </td>
-              <td>
-                {sub.status === 'Active' ? (
-                  <span className="badge badge--ok">Active</span>
-                ) : (
-                  <span className="badge badge--bad">Cancelled</span>
-                )}
-              </td>
-              <td>
-                {sub.status === 'Active' ? (
-                  <>
-                    {formatTime(sub.nextChargeTs)}
-                    {sub.nextChargeTs <= nowSecs ? (
-                      <>
-                        {' '}
-                        <span className="badge badge--warn">Due</span>
-                      </>
-                    ) : null}
-                  </>
-                ) : (
-                  <span className="muted">—</span>
-                )}
-              </td>
-              <td>{sub.charges + 1}</td>
-              <td>
-                <Link
-                  href={`/subscriptions/${String(sub.id)}`}
-                  aria-label={`Charges of subscription ${String(sub.id)}`}
-                >
-                  Charges
-                </Link>{' '}
-                {sub.status === 'Active' ? (
-                  <button
-                    type="button"
-                    className="btn btn--danger"
-                    disabled={!canCancel || busy}
-                    aria-label={`Cancel subscription ${String(sub.id)}`}
-                    onClick={() => {
-                      setConfirming(sub.id);
-                      setMessage(null);
-                    }}
+          {items.map((keeperSub) => {
+            const sub: Subscription = cancelled.has(keeperSub.id)
+              ? { ...keeperSub, status: 'Cancelled' }
+              : keeperSub;
+            return (
+              <tr key={sub.id}>
+                <th scope="row">#{sub.id}</th>
+                <td>
+                  <span className="mono" title={sub.subscriber}>
+                    {shortAddress(sub.subscriber)}
+                  </span>
+                </td>
+                <td>
+                  {sub.status === 'Active' ? (
+                    <span className="badge badge--ok">Active</span>
+                  ) : (
+                    <span className="badge badge--bad">Cancelled</span>
+                  )}
+                </td>
+                <td>
+                  {sub.status === 'Active' ? (
+                    <>
+                      {formatTime(sub.nextChargeTs)}
+                      {sub.nextChargeTs <= nowSecs ? (
+                        <>
+                          {' '}
+                          <span className="badge badge--warn">Due</span>
+                        </>
+                      ) : null}
+                    </>
+                  ) : (
+                    <span className="muted">—</span>
+                  )}
+                </td>
+                <td>{sub.charges + 1}</td>
+                <td>
+                  <Link
+                    href={`/subscriptions/${String(sub.id)}`}
+                    aria-label={`Charges of subscription ${String(sub.id)}`}
                   >
-                    Cancel
-                  </button>
-                ) : null}
-              </td>
-            </tr>
-          ))}
+                    Charges
+                  </Link>{' '}
+                  {sub.status === 'Active' ? (
+                    <button
+                      type="button"
+                      className="btn btn--danger"
+                      disabled={!canCancel || busy}
+                      aria-label={`Cancel subscription ${String(sub.id)}`}
+                      onClick={() => {
+                        setConfirming(sub.id);
+                        setMessage(null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -319,15 +349,6 @@ function SubscribersTable(props: {
             </button>
           </div>
         </div>
-      )}
-
-      {message === null ? null : (
-        <p
-          role={message.ok ? 'status' : 'alert'}
-          className={message.ok ? 'badge badge--ok' : 'field__error'}
-        >
-          {message.text}
-        </p>
       )}
     </div>
   );

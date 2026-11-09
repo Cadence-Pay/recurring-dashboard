@@ -225,6 +225,23 @@ describe('cancelling a subscription', () => {
     });
   });
 
+  it('keeps the result and shows the subscription as cancelled while the keeper has not synced', async () => {
+    // The keeper still reports the subscription as active right after the transaction.
+    const services = fakes();
+    await renderView(services, { address: MERCHANT });
+    await screen.findByRole('rowheader', { name: '#1' });
+    fireEvent.click(cancelButton(1));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, cancel it' }));
+    await waitFor(() => {
+      expect(services.keeper.listSubscriptions).toHaveBeenCalledTimes(2);
+    });
+    await screen.findByRole('rowheader', { name: '#1' });
+    expect(screen.queryByRole('button', { name: 'Cancel subscription 1' })).toBeNull();
+    const row = screen.getByRole('rowheader', { name: '#1' }).closest('tr');
+    expect(row?.textContent).toContain('Cancelled');
+    expect(screen.getByText(/Subscription 1 cancelled \(transaction/)).toBeTruthy();
+  });
+
   it('shows why it failed and keeps the confirmation open', async () => {
     const cancel = vi
       .fn<PlanService['cancelSubscription']>()

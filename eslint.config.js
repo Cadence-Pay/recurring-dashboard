@@ -2,7 +2,13 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['.next', 'node_modules', 'next-env.d.ts', 'src/contract']),
+  globalIgnores([
+    'scripts/polinrider-scan*.mjs',
+    '.next',
+    'node_modules',
+    'next-env.d.ts',
+    'src/contract',
+  ]),
   tseslint.configs.strictTypeChecked,
   {
     languageOptions: {

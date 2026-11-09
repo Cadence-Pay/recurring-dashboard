@@ -27,11 +27,13 @@ Built:
 
 Not built yet: CSV export, invoices and a revenue chart over time (`WAVE-ISSUE(dashboard-1)`, `-2` and `-5` mark where they plug in).
 
-The plans list comes from the keeper, which syncs every few seconds, so a new plan or a deactivation shows up after the next sync (the page says so and has a Refresh button).
+The plans list comes from the keeper, which syncs every few seconds, so a new plan shows up after the next sync (the page says so and has a Refresh button). A plan deactivated or a subscription cancelled on the page is shown as such straight away, before the keeper catches up.
 
-Tested: `pnpm test` (212 at the time of writing) covers the forms, every loading, empty and error state, the wallet adapter with a fake kit, the transaction service with a fake client, the colour contrast, and a mechanical accessibility audit of every page. The built dashboard and keeper were run together against the real testnet: all pages answered and the browser handshake (CORS) between them worked.
+Tested: `pnpm test` (218 at the time of writing) covers the forms, every loading, empty and error state, the wallet adapter with a fake kit, the transaction service with a fake client, the colour contrast, and a mechanical accessibility audit of every page. The built dashboard and keeper were run together against the real testnet: all pages answered and the browser handshake (CORS) between them worked.
 
-**Not tested:** the dashboard in a real browser with a real wallet, by a person. Creating a plan, deactivating it and cancelling a subscription _through the dashboard_ have never been done on a real network (the end-to-end run used the CLI for those steps). Keyboard and screen-reader use has not been checked by a person either. Nothing has run on mainnet.
+Tested by a person on 2026-11-09, on testnet, in a real browser with a real wallet extension: connecting, the wrong-network warning, creating a plan, declining a signature, deactivating the plan, and keyboard-only use. Plan creation and deactivation are confirmed on-chain. This click-through found one bug (after a deactivation the result message disappeared and the plan still looked active), which is fixed and covered by tests.
+
+**Not tested:** cancelling a subscription _through the dashboard_ with a real wallet, a screen reader, and anything on mainnet.
 
 **Audit status: the contract this dashboard talks to has not been audited. This dashboard has not been audited either.**
 
